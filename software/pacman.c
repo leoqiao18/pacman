@@ -1,22 +1,18 @@
-#include <stdio.h>
 #include "gamepad.h"
+#include <stdio.h>
 
-void gamepad_handler(gamepad_buttons_t buttons) {
-  if (buttons & GAMEPAD_LEFT) printf("LEFT\n");
-  if (buttons & GAMEPAD_RIGHT) printf("RIGHT\n");
-  if (buttons & GAMEPAD_UP) printf("UP\n");
-  if (buttons & GAMEPAD_DOWN) printf("DOWN\n");
-  if (buttons & GAMEPAD_X) printf("X\n");
-  if (buttons & GAMEPAD_Y) printf("Y\n");
-  if (buttons & GAMEPAD_A) printf("A\n");
-  if (buttons & GAMEPAD_B) printf("B\n");
-  if (buttons & GAMEPAD_L) printf("L\n");
-  if (buttons & GAMEPAD_R) printf("R\n");
-  if (buttons & GAMEPAD_SELECT) printf("SELECT\n");
-  if (buttons & GAMEPAD_START) printf("START\n");
+void listener(gamepad_button_event_t e, gamepad_button_t b) {
+  static int count = 0;
+  if (e == GAMEPAD_KEY_UP && b == GAMEPAD_A) {
+    count++;
+    printf("%d\n", count);
+  }
 }
 
 int main() {
-  gamepad_start(gamepad_handler);
+  gamepad_init();
+  gamepad_set_listener(&listener);
+  while (1)
+    ;
   return 1;
 }

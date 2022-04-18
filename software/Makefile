@@ -7,24 +7,36 @@ else
 
 # We are being compiled as a module: use the Kernel build system
 
-	KERNEL_SOURCE := /usr/src/linux-headers-$(shell uname -r)
-        PWD := $(shell pwd)
+# KERNEL_SOURCE := /usr/src/linux-headers-$(shell uname -r)
+#        PWD := $(shell pwd)
+#
+# default: module pacman
+default: pacman
 
-default: module hello
+CFLAGS = -Wall
 
-module:
-	${MAKE} -C ${KERNEL_SOURCE} SUBDIRS=${PWD} modules
+OBJECTS = pacman.o gamepad.o
+
+pacman: $(OBJECTS)
+	cc $(CFLAGS) -o pacman $(OBJECTS) -lusb-1.0 -pthread
+
+pacman.o: pacman.c gamepad.h
+gamepad.o: gamepad.h
+
+
+# module:
+# 	${MAKE} -C ${KERNEL_SOURCE} SUBDIRS=${PWD} modules
 
 clean:
-	${MAKE} -C ${KERNEL_SOURCE} SUBDIRS=${PWD} clean
-	${RM} hello
+	# ${MAKE} -C ${KERNEL_SOURCE} SUBDIRS=${PWD} clean
+	${RM} -rf *.o pacman
 
-TARFILES = Makefile README vga_ball.h vga_ball.c hello.c
-TARFILE = lab3-sw.tar.gz
-.PHONY : tar
-tar : $(TARFILE)
-
-$(TARFILE) : $(TARFILES)
-	tar zcfC $(TARFILE) .. $(TARFILES:%=lab3-sw/%)
+# TARFILES = Makefile README vga_ball.h vga_ball.c hello.c
+# TARFILE = lab3-sw.tar.gz
+# .PHONY : tar
+# tar : $(TARFILE)
+#
+# $(TARFILE) : $(TARFILES)
+# 	tar zcfC $(TARFILE) .. $(TARFILES:%=lab3-sw/%)
 
 endif 
