@@ -1,4 +1,4 @@
-**Sprite attribute table**
+*****SPRITE ATTRIBUTE TABLE*****
 Row 0: Vertical Position (sprite 1)
 Row 1: Horizontal Position (sprite 1)
 Row 2: Sprite 1 Address in generator table
@@ -15,7 +15,7 @@ Note: Due to the limitation of 8 bits, the vertical and horizontal positions of 
 Addressing is relative. Sprite address of 8'b1 points to the 1st sprite, and 8'b10 points to the 2nd sprite.
 
 
-**Sprite generator table**
+*****SPRITE GENERATOR TABLE*****
 Row 0: |Pixel 1 | Pixel 2| (1st pixel row)
 Row 1: |Pixel 3 | Pixel 4| (1st pixel row)
 ...
@@ -31,7 +31,7 @@ Row 129: |Pixel 3 | Pixel 4| (2nd sprite, 1st pixel row)
 Each pixel consists of 4 bits, which corresponds to a RGB value in the color lookup table. Each row in the generator table stores two pixels. Therefore, one 16 pixel row of a sprite uses 8 rows in the generator table, and an entire 16*16 sprite uses 8*16=128 rows in the generator table
 
 
-**Pattern name table**
+*****PATTERN NAME TABLE*****
 Row 0: Address of 1st tile
 Row 1: Address of 2nd tile
 ...
@@ -43,7 +43,7 @@ Since our game will start at a vertical position of 20 and horizontal position o
 
 Addressing is relative. Tile address of 8'b1 points to the 1st pattern in the generator table, and 8'b10 points to the 2nd pattern.
 
-**Pattern generator table**
+*****PATTERN GENERATOR TABLE*****
 Row 0: |Pixel 1 | Pixel 2| (1st pixel row)
 Row 1: |Pixel 3 | Pixel 4| (1st pixel row)
 Row 2: |Pixel 5 | Pixel 6| (1st pixel row)
