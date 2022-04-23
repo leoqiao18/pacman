@@ -8,12 +8,12 @@ Row 5: Horizontal Position (sprite 2)
 Row 6: Sprite 2 Address in generator table
 Row 7: Unused
 ...
-*Since our game will start at a vertical position of 20 and horizontal position of 100, setting vertical position to 0 and horizontal position of 0 will draw the sprite at pixel coordinates v=20 and h=100. 
+Since our game will start at a vertical position of 20 and horizontal position of 100, setting vertical position to 0 and horizontal position of 0 will draw the sprite at pixel coordinates v=20 and h=100. 
 
 Note: Due to the limitation of 8 bits, the vertical and horizontal positions of the sprite will be double the value in the table. For example, setting vertical position to 50 and horizontal position of 80 will draw the sprite at pixel coordinates v=20+2*50=120, h=100+80*2=260.
 
 Addressing is relative. Sprite address of 8'b1 points to the 1st sprite, and 8'b10 points to the 2nd sprite.
-* 
+
 
 **Sprite generator table**
 Row 0: |Pixel 1 | Pixel 2| (1st pixel row)
@@ -37,12 +37,11 @@ Row 1: Address of 2nd tile
 ...
 Row N: Address of Nth tile
 ...
-*Since our game will start at a vertical position of 20 and horizontal position of 100, 1st tile will start at v=20, h=100.
+Since our game will start at a vertical position of 20 and horizontal position of 100, 1st tile will start at v=20, h=100.
 
 55 tiles per row (!!might need to be multiple of 2), 55 tiles per column
 
 Addressing is relative. Tile address of 8'b1 points to the 1st pattern in the generator table, and 8'b10 points to the 2nd pattern.
-* 
 
 **Pattern generator table**
 Row 0: |Pixel 1 | Pixel 2| (1st pixel row)
