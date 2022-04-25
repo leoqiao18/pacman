@@ -3,7 +3,7 @@
  *
  * Stephen A. Edwards
  * Columbia University
- */
+ *///
 
 module vga_ball(input logic        clk,
 	        input logic 	   reset,
