@@ -27,13 +27,13 @@ module vga_ball(input logic        clk,
    
    
    	//for pattern name table 
-   	logic [7:0] ra_n, wa_n; //change later
+   	logic [11:0] ra_n, wa_n; //12 bits
 	logic we_n;
 	logic [7:0] din_n;
 	logic [7:0] dout_n;
 	
 	//for pattern generator table 
-   	logic [7:0] ra_pg, wa_pg; //change later
+   	logic [10:0] ra_pg, wa_pg; //change later
 	logic we_pg;
 	logic [7:0] din_pg;
 	logic [7:0] dout_pg;
@@ -79,8 +79,8 @@ module vga_ball(input logic        clk,
 	sprite_gen_table sgt1(.clk(clk), .ra(ra_g), .wa(wa_g), .we(we_g), .din(din_g), .dout(dout_g));
 	color_lut cl1(.color_code(final_out_pixel), .rgb_val(rgb_val));
 	
-	//pattern_prep pp0(.clk(clk), .reset(reset), .hcount(hcount), .vcount(vcount), .VGA_BLANK_n(VGA_BLANK_n), 
-	//.dout_n (dout_n), .dout_g (dout_pg), .ra_n (ra_n), .ra_g(ra_pg), .out_pixel(out_pixel[5]));
+	pattern_prep pp0(.clk(clk), .reset(reset), .hcount(hcount), .vcount(vcount), .VGA_BLANK_n(VGA_BLANK_n), 
+	.dout_n (dout_n), .dout_g (dout_pg), .ra_n (ra_n), .ra_g(ra_pg), .out_pixel(out_pixel[5]));
 	
 	sprite_prep sp0(.clk(clk), .reset(reset), .h_start(h_start[0]), .hcount(hcount), .vcount(vcount), .VGA_BLANK_n(VGA_BLANK_n), .base_addr(sprite_base_addr[0]),
 	.dout_a (dout_a), .dout_g (dout_g), .ra_a (sprite_ra_a[0]), .ra_g(sprite_ra_g[0]), .out_pixel(out_pixel[0]));
@@ -104,22 +104,22 @@ module vga_ball(input logic        clk,
 			background_b <= 8'h20;
 		 end else if (chipselect && write) begin
 			case (writedata[1:0])
-/* 				2'b0 : begin //pattern name table
+				2'b0 : begin //pattern name table
 						we_n<=1; 
 						we_pg<=0;
 						we_a<=0;
 						we_g<=0;
 						din_n<=writedata[31:24];
-						//wa_n<=writedata[
+						wa_n<=writedata[13:2];
 					end
-				2'b1 : begin //pattern name table
-						we_n<=1; 
-						we_pg<=0;
+				2'b1 : begin //pattern gen table
+						we_n<=0; 
+						we_pg<=1;
 						we_a<=0;
 						we_g<=0;
-						din_n<=writedata[31:24];
-						//wa_n<=writedata[
-					end */
+						din_pg<=writedata[31:24];
+						wa_pg<=writedata[12:2];
+					end
 				2'b10 : begin //sprite attr table
 						we_n<=0; 
 						we_pg<=0;
@@ -137,44 +137,6 @@ module vga_ball(input logic        clk,
 						wa_g<=writedata[12:2];
 					end
 			endcase
-		 
-		 //need to wait for values to be loaded
-/* 		   case (address)
-			 3'h0 : begin //write to attr table
-						we_g<=0;
-						we_a<=1;
-						din_a<={writedata[7:3], 3'b0}; //5 MSB bits is data in
-						wa_a<=writedata[2:0]; //3 LSB is addr for data
-					end
-			 3'h1 : begin
-						we_a<=0;
-						we_g<=1;
-						wa_g <= writedata ; //sprite addr. for the 8 sprite pixels
-					end
-			 3'h2 : begin
-						we_a<=0;
-						we_g<=1;
-						din_g <= writedata; //8 sprite pixels
-					end
-		   endcase */
-/* 		   	case (address)
-			 3'h0 : begin //write to name table
-						we_pg<=0;
-						we_n<=1;
-						din_n<={2'b0, writedata[7], 5'b0}; //address is either 0 or 32 (two patterns available)
-						wa_n<={1'b0, writedata[6:0]}; //7 LSB is for addr
-					end
-			 3'h1 : begin
-						we_n<=0;
-						we_pg<=1;
-						wa_pg <= writedata ; //address to write pixels to
-					end
-			 3'h2 : begin
-						we_n<=0;
-						we_pg<=1;
-						din_pg <= writedata; //2 pattern pixels
-					end
-		   endcase */
 		 end
 	end
 	
@@ -321,29 +283,29 @@ module sprite_prep (input logic clk, reset,
     end
 endmodule
 
-/* module pattern_prep (input logic clk, reset,
+module pattern_prep (input logic clk, reset,
 	input logic [10:0] hcount,
 	input logic [9:0] vcount,
 	input logic VGA_BLANK_n,
 	input logic [7:0] dout_n,
 	input logic [7:0] dout_g,
-	output logic [7:0] ra_n,
-	output logic [7:0] ra_g,
+	output logic [11:0] ra_n,
+	output logic [10:0] ra_g,
 	output logic [3:0] out_pixel);
 	
-	logic [1023:0] shift_reg; //64 bit wide shift register
-	logic [10:0] shift_pos; //position in shift reg to read pixel value from
-	logic [7:0] pattern_row_offset; //which of 8 of a given pattern to display
-	logic [1023:0] display_pixel;// determines whether sprite or background pixel is shown
-	logic [10:0] shift_reg_shift; //bit position in shift reg to write to (0-63, steps of 8)
+	logic [2047:0] shift_reg; //8*64*4 bit wide shift register
+	logic [11:0] shift_pos; //position in shift reg to read pixel value from
+	logic [10:0] pattern_row_offset; //which of 8 of a given pattern to display
+	logic [2047:0] display_pixel;// determines whether sprite or background pixel is shown
+	logic [11:0] shift_reg_shift; //bit position in shift reg to write to (0-63, steps of 8)
 	logic [7:0] tile_total_counter; //counts the total number of tiles that has been loaded into shift reg
 	logic [7:0] tile_pixel_counter; //counts the number of tile pixel rows that has been loaded 
 	assign out_pixel=display_pixel[3:0];
 	
-	parameter [9:0] v_start=10'h8; //vertical position where first pattern begins
-	parameter [7:0] tiles_per_row=8'h20; //number of tiles per row
+	parameter [11:0] v_start=12'h0; //vertical position where first pattern begins
+	parameter [7:0] tiles_per_row=8'd64; //number of tiles per row
 	//parameter [7:0] tiles_per_col=8'h18; //number of tiles per column
-	parameter [7:0] name_table_addr_mask={3'b111, 5'b0}; 
+	parameter [11:0] name_table_addr_mask={6'b111111, 6'b0}; 
 	
 	enum {IDLE, READ_TILE_ADDR_BASE, READ_TILE_ADDR_BASE_WAIT, READ_PATT_PIXELS_BASE, READ_PATT_PIXELS_BASE_WAIT,
 	LOAD_SHIFT_REG, LOAD_SHIFT_REG_WAIT, READ_TILE_NEXT, READ_TILE_NEXT_WAIT, PATT_LOADED, PREPARE_PIXELS } 
@@ -362,20 +324,19 @@ endmodule
 			IDLE: begin
 				tile_total_counter<=8'b0;
 				tile_pixel_counter<=8'b0;
-				display_pixel<=1024'b0;
-				shift_reg<=1024'b0;
-				//shift_reg_shift<=10'h400; //dec=1024 (actual value used is 8 less)
-				shift_reg_shift<=11'b10000000000; //dec=1024 (actual value used is 8 less)
-				shift_pos<=11'b10000000000; // dec=1024 set shift position to start of shift regs (MSB) (actual value used is 4 less)
+				display_pixel<=2048'b0;
+				shift_reg<=2048'b0;
+				shift_reg_shift<=12'b100000000000; //dec=2048 (actual value used is 8 less)
+				shift_pos<=12'b100000000000; // dec=2048 set shift position to start of shift regs (MSB) (actual value used is 4 less)
 
 			end
 			READ_TILE_ADDR_BASE: begin
-				ra_n<=((vcount[7:0]-v_start[7:0])<<2) & name_table_addr_mask; //get address of (starting) tile pixel address in name table
-				pattern_row_offset<={5'b0, vcount[2:0]-v_start[2:0]}; //which of 8 pixel rows to access
+				ra_n<=(({2'b0, vcount}-v_start)<<3) & name_table_addr_mask; //get address of (starting) tile pixel address in name table
+				pattern_row_offset<={8'b0, vcount[2:0]-v_start[2:0]}; //which of 8 pixel rows to access
 			end
 
 			READ_PATT_PIXELS_BASE: begin //!!note: address no longer >> shifted by 3!!
-				ra_g<=dout_n + (pattern_row_offset<<2); //read base 8 pixels in gen table,4x offset since 4 table rows needed per pixel line 
+				ra_g<={dout_n[5:0], 5'b0} + (pattern_row_offset<<2); //read base 8 pixels in gen table,4x offset since 4 table rows needed per pixel line 
 			end
 			
 			READ_PATT_PIXELS_BASE_WAIT: begin //!!note: address no longer >> shifted by 3!!
@@ -383,23 +344,21 @@ endmodule
 			end
 			
 			LOAD_SHIFT_REG: begin //first time: gets ra_g pixels_base stage and not base_wait stage
-				shift_reg<= ({1016'b0, dout_g}<<(shift_reg_shift-11'h8)) | shift_reg; //store left-most 8 pixels of sprite line
-				shift_reg_shift<=shift_reg_shift-11'h8; //minus 8
+				shift_reg<= ({2040'b0, dout_g}<<(shift_reg_shift-12'h8)) | shift_reg; //store left-most 8 pixels of sprite line
+				shift_reg_shift<=shift_reg_shift-12'h8; //minus 8
 				ra_g<=ra_g+1; //increment gen table address by one to read upcoming pixels
 				tile_pixel_counter<=tile_pixel_counter+8'b1;
 			end
 			READ_TILE_NEXT: begin 
-				ra_n<=ra_n+8'b1; //increment name table address
+				ra_n<=ra_n+1; //increment name table address
 				tile_pixel_counter<=8'b0;
 				tile_total_counter<=tile_total_counter+8'b1;
 			end
 			
-			//update shiftpos here
-			
 			PREPARE_PIXELS: begin
 				if (VGA_BLANK_n && !hcount[0]) begin
-					display_pixel<=(shift_reg>>(shift_pos-11'h4)); //Only 4 LSB of display_pixel matter
-					shift_pos<=shift_pos-11'h4; //minus 4
+					display_pixel<=(shift_reg>>(shift_pos-12'h4)); //Only 4 LSB of display_pixel matter
+					shift_pos<=shift_pos-12'h4; //minus 4
 				end
 			end
 		endcase
@@ -408,7 +367,7 @@ endmodule
 
 	always_comb begin
         case (state)
-            IDLE:       state_next = ((hcount==11'b10100100000) && (vcount>=v_start) ) ? READ_TILE_ADDR_BASE: IDLE; //start at h=1312 and vcount=8
+            IDLE:       state_next = ((hcount==11'd1152) && (vcount>=v_start[9:0]) && (vcount<10'd480)) ? READ_TILE_ADDR_BASE: IDLE; //start at h=1152 and vcount=0
             READ_TILE_ADDR_BASE:      state_next = READ_TILE_ADDR_BASE_WAIT; //extra cycle for reading vertical position in attr table
 			READ_TILE_ADDR_BASE_WAIT:   state_next = READ_PATT_PIXELS_BASE; //check if true: ra_a update needs 2 cycles for some reason
 			READ_PATT_PIXELS_BASE:  	state_next = READ_PATT_PIXELS_BASE_WAIT;
@@ -418,12 +377,12 @@ endmodule
 			READ_TILE_NEXT_WAIT: state_next=(tile_total_counter==tiles_per_row)? PATT_LOADED: READ_PATT_PIXELS_BASE;
 			
 			//if new vertical line started, begin down counting
-			PATT_LOADED: state_next= (hcount==11'b0) ? PREPARE_PIXELS : PATT_LOADED;
-			PREPARE_PIXELS: state_next= (shift_pos==11'b0) ? IDLE : PREPARE_PIXELS;
+			PATT_LOADED: state_next= (hcount==11'd127) ? PREPARE_PIXELS : PATT_LOADED;
+			PREPARE_PIXELS: state_next= (shift_pos==12'b0 || vcount>10'd480) ? IDLE : PREPARE_PIXELS;
             default:    state_next = IDLE;
         endcase
     end
-endmodule */
+endmodule
 
 module sprite_attr_table( //stores sprite information (x, y, name, color)
 	//x and y position has to be a multiple (2x) of hcount/vcount since only 8 bits
@@ -458,12 +417,12 @@ endmodule
 
 module patt_name_table( //stores 8 bit address of tiles on each row
 	input logic clk,
-	input logic [7:0] ra, wa, //change later
+	input logic [11:0] ra, wa, //12 bit addr
 	input logic we,
 	input logic [7:0] din, 
 	output logic [7:0] dout);
 	
-	logic[7:0] mem[255:0];
+	logic[7:0] mem[4095:0];
 	
 	always_ff @(posedge clk) begin
       if (we) mem[wa] <= din;
@@ -473,12 +432,12 @@ endmodule
 
 module patt_gen_table( //stores 8x8 patterns
 	input logic clk,
-	input logic [7:0] ra, wa, //change later
+	input logic [10:0] ra, wa, 
 	input logic we,
 	input logic [7:0] din,
 	output logic [7:0] dout);
 	
-	logic[7:0] mem[255:0]; //32 8 bit words need per pattern: 4 table rows (32 bits) per pixel row
+	logic[7:0] mem[2047:0]; //32 8 bit words need per pattern: 4 table rows (32 bits) per pixel row
 	 
 	always_ff @(posedge clk) begin
       if (we) mem[wa] <= din;
